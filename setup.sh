@@ -89,13 +89,15 @@ success "$(brew --version | head -1)"
 info "Step 4/16 — System packages"
 
 for pkg in python@3.12 python@3.11 node git sqlite gh bat eza wget curl jq htop lftp uv colima docker docker-compose; do
-    brew install "$pkg" --quiet 2>/dev/null || brew upgrade "$pkg" --quiet 2>/dev/null || true
-    success "$pkg"
+    brew install "$pkg" 2>/dev/null || brew upgrade "$pkg" 2>/dev/null \
+        && success "$pkg" \
+        || warn "$pkg install failed — run manually: brew install $pkg"
 done
 
 for cask in iterm2 tailscale visual-studio-code; do
-    brew install --cask "$cask" --quiet 2>/dev/null || true
-    success "$cask"
+    brew install --cask "$cask" 2>/dev/null \
+        && success "$cask" \
+        || warn "$cask install failed — run manually: brew install --cask $cask"
 done
 
 # Ensure python3.12 is the default python3
