@@ -155,6 +155,10 @@ fi
 ssh-add --apple-use-keychain "$HOME/.ssh/id_ed25519" 2>/dev/null \
     || ssh-add "$HOME/.ssh/id_ed25519" 2>/dev/null || true
 
+# Pre-trust GitHub's host key so the auth test doesn't hang on a prompt
+ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+ssh-keyscan -t rsa     github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+
 # Harden SSH client config
 SSH_CONF="$HOME/.ssh/config"
 if ! grep -q "ServerAliveInterval" "$SSH_CONF" 2>/dev/null; then
