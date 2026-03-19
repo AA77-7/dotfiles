@@ -18,16 +18,22 @@ success ".zshrc installed"
 
 # iTerm2
 if [[ -f "$DOTFILES/iterm2/com.googlecode.iterm2.plist" ]]; then
-    cp "$DOTFILES/iterm2/com.googlecode.iterm2.plist" "$HOME/Library/Preferences/com.googlecode.iterm2.plist"
-    success "iTerm2 preferences installed (restart iTerm2)"
+    cp "$DOTFILES/iterm2/com.googlecode.iterm2.plist" \
+        "$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+    success "iTerm2 preferences installed (restart iTerm2 to apply)"
 fi
 
-# git
-if [[ -f "$DOTFILES/git/.gitconfig" ]]; then
-    backup "$HOME/.gitconfig"
-    cp "$DOTFILES/git/.gitconfig" "$HOME/.gitconfig"
-    success ".gitconfig installed"
-fi
+# git — only install aliases/settings, never overwrite user.name/email
+# (setup.sh handles identity; we just layer on useful git settings)
+git config --global init.defaultBranch main
+git config --global pull.rebase false
+git config --global fetch.prune true
+git config --global diff.algorithm histogram
+git config --global credential.helper osxkeychain
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.lg "log --oneline --graph --decorate -20"
+success "git settings applied (identity untouched)"
 
 echo ""
 echo "Done. Open a new terminal to load the new shell config."
