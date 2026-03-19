@@ -18,18 +18,20 @@ success() { echo -e "${GREEN}  ✓${NC} $*"; }
 warn()    { echo -e "${YELLOW}  !${NC} $*"; }
 die()     { echo -e "${RED}  ✗ ERROR:${NC} $*" >&2; exit 1; }
 
-BOT_DIR="$HOME/Documents/code/polymarket_bot"
-PLIST_DIR="$HOME/Library/LaunchAgents"
 CODE_DIR="$HOME/Documents/code"
-LOCAL_IP="unknown"   # set properly in step 6; default avoids set -u crash
+BOT_DIR="$CODE_DIR/polymarket_bot"
+PLIST_DIR="$HOME/Library/LaunchAgents"
+LOCAL_IP="unknown"   # set in step 6; default here avoids set -u crash
+
+# Create critical directories early — launchd plists reference these paths
+# before step 13 would otherwise create them
+mkdir -p "$BOT_DIR/data" "$BOT_DIR/logs" "$PLIST_DIR" "$CODE_DIR"
 
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║     Personal Mac Mini — Full Setup       ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
-
-# Guard: must be running from inside the repo
 
 # =============================================================================
 # STEP 1 — Xcode Command Line Tools
@@ -343,6 +345,14 @@ EOF
     success "Colima boot agent installed"
 fi
 
+# Start health platform DB + Redis (needed for daily sync job)
+HP_COMPOSE="$CODE_DIR/health-platform/docker-compose.yml"
+if [[ -f "$HP_COMPOSE" ]]; then
+    docker-compose -f "$HP_COMPOSE" up -d db redis 2>/dev/null \
+        && success "Health platform DB + Redis started" \
+        || warn "docker-compose up failed — run manually: docker-compose -f $HP_COMPOSE up -d db redis"
+fi
+
 # health-platform .env
 HP_DIR="$CODE_DIR/health-platform"
 HP_ENV="$HP_DIR/.env"
@@ -395,6 +405,7 @@ VENV_PATH="$BOT_DIR/.venv"
 python3.12 -m venv "$VENV_PATH"
 "$VENV_PATH/bin/pip" install --upgrade pip --quiet
 "$VENV_PATH/bin/pip" install -r "$BOT_DIR/requirements.txt" --quiet
+# dirs already created at top of script; ensure they exist post-clone too
 mkdir -p "$BOT_DIR/data" "$BOT_DIR/logs"
 
 BOT_ENV="$BOT_DIR/.env"
@@ -437,10 +448,10 @@ fi
 # STEP 15 — Power settings (always on)
 # =============================================================================
 info "Step 15/16 — Power settings"
-sudo pmset -a sleep 0        && success "Machine sleep disabled"
-sudo pmset -a displaysleep 30 && success "Display sleep: 30 min"
-sudo pmset -a disksleep 0    && success "Disk sleep disabled"
-sudo pmset -a womp 1         && success "Wake on network access: on"
+sudo pmset -a sleep 0        && success "Machine sleep disabled"        || warn "pmset sleep failed"
+sudo pmset -a displaysleep 30 && success "Display sleep: 30 min"        || warn "pmset displaysleep failed"
+sudo pmset -a disksleep 0    && success "Disk sleep disabled"           || warn "pmset disksleep failed"
+sudo pmset -a womp 1         && success "Wake on network access: on"    || warn "pmset womp failed"
 
 # =============================================================================
 # STEP 16 — Bot smoke test
@@ -464,9 +475,12 @@ echo "  Local SSH:  ssh $(whoami)@${LOCAL_IP}"
 echo "  Remote SSH: open Tailscale.app → sign in → ssh $(whoami)@<100.x.x.x>"
 echo ""
 echo "  Three things to do now:"
-echo "    1. Open Tailscale.app and sign in with your personal account"
-echo "    2. Run: claude       → sign in with PERSONAL Anthropic account"
-echo "    3. Run: openclaw     → set up your OpenClaw workspace"
+echo "    1. Open Tailscale.app → sign in with personal account → note your 100.x.x.x IP"
+echo "    2. Run: claude        → sign in with PERSONAL Anthropic account"
+echo "    3. Run: openclaw      → configure your workspace"
+echo ""
+echo "  ⚠  MacBook: disable the RESEARCH cron on your laptop now that Mac Mini is running:"
+echo "     crontab -e   →   comment out the polymarket_bot line"
 echo ""
 echo "  Logs:  tail -f $BOT_DIR/logs/cron.log"
 echo "  DB:    sqlite3 $BOT_DIR/data/polymarket.db"
