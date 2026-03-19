@@ -18,7 +18,7 @@ success() { echo -e "${GREEN}  ✓${NC} $*"; }
 warn()    { echo -e "${YELLOW}  !${NC} $*"; }
 die()     { echo -e "${RED}  ✗ ERROR:${NC} $*" >&2; exit 1; }
 
-REPO_PATH="$(cd "$(dirname "$0")/.." && pwd)"
+BOT_DIR="$HOME/Documents/code/polymarket_bot"
 PLIST_DIR="$HOME/Library/LaunchAgents"
 CODE_DIR="$HOME/Documents/code"
 LOCAL_IP="unknown"   # set properly in step 6; default avoids set -u crash
@@ -30,7 +30,6 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 # Guard: must be running from inside the repo
-[[ -f "$REPO_PATH/main.py" ]] || die "Run this from inside the polymarket_bot repo: bash deploy/setup.sh"
 
 # =============================================================================
 # STEP 1 — Xcode Command Line Tools
@@ -271,9 +270,7 @@ clone_or_pull() {
     fi
 }
 
-# polymarket_bot is already here (we're running from it) — just pull
-git -C "$REPO_PATH" pull --quiet 2>/dev/null && success "polymarket_bot up to date" || true
-
+clone_or_pull "polymarket_bot"       "$CODE_DIR/polymarket_bot"
 clone_or_pull "health-platform"      "$CODE_DIR/health-platform"
 clone_or_pull "schoolguard"          "$CODE_DIR/schoolguard"
 clone_or_pull "shamsalassil-website" "$CODE_DIR/shamsalassil-website"
@@ -338,8 +335,8 @@ if [[ ! -f "$COLIMA_PLIST" ]]; then
     </array>
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><false/>
-    <key>StandardOutPath</key><string>$REPO_PATH/logs/colima.log</string>
-    <key>StandardErrorPath</key><string>$REPO_PATH/logs/colima.err.log</string>
+    <key>StandardOutPath</key><string>$BOT_DIR/logs/colima.log</string>
+    <key>StandardErrorPath</key><string>$BOT_DIR/logs/colima.err.log</string>
 </dict></plist>
 EOF
     launchctl load "$COLIMA_PLIST" 2>/dev/null || true
@@ -379,8 +376,8 @@ if [[ ! -f "$HP_SYNC_PLIST" ]]; then
         <key>WHOOP_ACCESS_TOKEN</key><string>${WHOOP_ACCESS_TOKEN:-}</string>
         <key>OURA_ACCESS_TOKEN</key><string>${OURA_ACCESS_TOKEN:-}</string>
     </dict>
-    <key>StandardOutPath</key><string>$REPO_PATH/logs/health-sync.log</string>
-    <key>StandardErrorPath</key><string>$REPO_PATH/logs/health-sync.err.log</string>
+    <key>StandardOutPath</key><string>$BOT_DIR/logs/health-sync.log</string>
+    <key>StandardErrorPath</key><string>$BOT_DIR/logs/health-sync.err.log</string>
     <key>RunAtLoad</key><false/>
 </dict></plist>
 EOF
@@ -392,7 +389,7 @@ fi
 # STEP 13 — Polymarket bot venv + launchd
 # =============================================================================
 info "Step 13/16 — Polymarket bot"
-BOT_DIR="$REPO_PATH"
+# BOT_DIR already set above
 VENV_PATH="$BOT_DIR/.venv"
 
 python3.12 -m venv "$VENV_PATH"
