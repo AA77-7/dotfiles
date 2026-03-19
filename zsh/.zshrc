@@ -175,6 +175,17 @@ mkcd() { mkdir -p "$1" && cd "$1"; }
 [ -s "$HOME/.scm_breeze/scm_breeze.sh" ] && source "$HOME/.scm_breeze/scm_breeze.sh"
 
 # ============================================================================
+# OpenClaw
+# ============================================================================
+
+if command -v openclaw &>/dev/null; then
+    [ -s "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"
+    alias ocgs='openclaw --profile gradschool'
+    alias ocgs-browser='openclaw --profile gradschool browser --browser-profile gradschool'
+    ocgs-ask() { openclaw --profile gradschool agent --agent main --message "$*"; }
+fi
+
+# ============================================================================
 # Performance Report
 # ============================================================================
 
