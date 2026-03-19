@@ -70,16 +70,24 @@ if ! command -v brew &>/dev/null; then
         "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# Put brew on PATH now and in future shells
-if [[ -f /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    grep -q 'brew shellenv' "$HOME/.zprofile" 2>/dev/null || \
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
-elif [[ -f /usr/local/bin/brew ]]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-fi
+# Put brew on PATH for this script AND future shells
+BREW_BIN=""
+[[ -f /opt/homebrew/bin/brew ]] && BREW_BIN="/opt/homebrew/bin/brew"  # Apple Silicon
+[[ -f /usr/local/bin/brew    ]] && BREW_BIN="/usr/local/bin/brew"     # Intel
 
-command -v brew &>/dev/null || die "brew not found after install — restart Terminal and re-run"
+[[ -n "$BREW_BIN" ]] || die "Homebrew not found — install failed"
+
+eval "$($BREW_BIN shellenv)"
+
+# Persist to .zprofile (loads in every new terminal)
+grep -q 'brew shellenv' "$HOME/.zprofile" 2>/dev/null || \
+    echo "eval \"\$($BREW_BIN shellenv)\"" >> "$HOME/.zprofile"
+
+# Also add to .zshrc so interactive non-login shells get it too
+grep -q 'brew shellenv' "$HOME/.zshrc" 2>/dev/null || \
+    echo "eval \"\$($BREW_BIN shellenv)\"" >> "$HOME/.zshrc"
+
+command -v brew &>/dev/null || die "brew not on PATH after shellenv eval — this shouldn't happen"
 brew update --quiet 2>/dev/null || true
 success "$(brew --version | head -1)"
 
@@ -488,3 +496,7 @@ echo "  Logs:  tail -f $BOT_DIR/logs/cron.log"
 echo "  DB:    sqlite3 $BOT_DIR/data/polymarket.db"
 echo ""
 echo "  AI:    claude | gemini | codex | openclaw"
+echo ""
+echo -e "  ${YELLOW}IMPORTANT: This terminal won't have brew/tools on PATH.${NC}"
+echo "  Open a new terminal (or iTerm2) — everything will work there."
+echo "  Or run now:  source ~/.zshrc"
