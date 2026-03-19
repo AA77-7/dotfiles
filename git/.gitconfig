@@ -1,0 +1,21 @@
+[user]
+	name = Abdullah Arslan
+	email = abdullah.arslan@imc.com
+[http]
+	emptyAuth = true
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[fetch]
+	prune = true
+[diff]
+	algorithm = histogram
+[credential]
+	helper = osxkeychain
+[alias]
+	st = status
+	co = checkout
+	lg = log --oneline --graph --decorate -20
+[core]
+	excludesfile = /Users/aarslan/.config/git/ignore
