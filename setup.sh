@@ -189,14 +189,18 @@ echo ""
 cat "$HOME/.ssh/id_ed25519.pub"
 echo ""
 # Verify it actually works before proceeding
+# Note: ssh -T exits with code 1 even on success (GitHub denies shell access by design)
+# so we capture output separately rather than using a pipe with set -o pipefail
 while true; do
     echo -n "  Press Enter to test GitHub SSH access... "
     read -r _
-    if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    SSH_RESULT=$(ssh -T git@github.com 2>&1 || true)
+    if echo "$SSH_RESULT" | grep -q "successfully authenticated"; then
         success "GitHub SSH authenticated"
         break
     else
         warn "Not authenticated yet — add the key to GitHub and try again"
+        echo "  (GitHub said: $SSH_RESULT)"
     fi
 done
 
