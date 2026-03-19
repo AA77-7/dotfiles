@@ -294,10 +294,13 @@ info "Step 10/16 — Clone repos"
 
 clone_or_pull() {
     local repo="$1" dir="$2"
-    if [[ ! -d "$dir" ]]; then
-        git clone "git@github.com:AA77-7/${repo}.git" "$dir" && success "cloned $repo"
-    else
+    if [[ -d "$dir/.git" ]]; then
+        # Valid repo — just pull
         git -C "$dir" pull --quiet && success "$repo up to date"
+    else
+        # Missing or partial — wipe and clone fresh
+        rm -rf "$dir"
+        git clone "git@github.com:AA77-7/${repo}.git" "$dir" && success "cloned $repo"
     fi
 }
 
