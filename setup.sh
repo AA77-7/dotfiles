@@ -245,7 +245,16 @@ if [[ ! -f "$SECRETS_FILE" ]]; then
     echo "  Enter your keys. Press Enter to skip any you don't have yet."
     echo ""
     echo -n "  Anthropic API key (personal — console.anthropic.com): "; read -r ANTHROPIC_API_KEY
-    echo -n "  Discord webhook URL:                                   "; read -r DISCORD_WEBHOOK
+    echo ""
+    echo "  Discord — create these channels in your server:"
+    echo "    #bot-trades   trade opens/closes"
+    echo "    #bot-health   daily summary, circuit breaker, silence alerts"
+    echo "    #schoolguard  comment moderation events from the school Instagram"
+    echo "  For each: channel settings → Integrations → Webhooks → New Webhook → Copy URL"
+    echo ""
+    echo -n "  Discord webhook for #bot-trades:   "; read -r DISCORD_WEBHOOK_TRADES
+    echo -n "  Discord webhook for #bot-health:   "; read -r DISCORD_WEBHOOK_HEALTH
+    echo -n "  Discord webhook for #schoolguard:  "; read -r DISCORD_WEBHOOK_SCHOOLGUARD
     echo -n "  OpenAI API key:                                        "; read -r OPENAI_API_KEY
     echo -n "  Google API key:                                        "; read -r GOOGLE_API_KEY
     echo -n "  Whoop access token:                                    "; read -r WHOOP_ACCESS_TOKEN
@@ -259,7 +268,9 @@ if [[ ! -f "$SECRETS_FILE" ]]; then
 export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
 export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 export GOOGLE_API_KEY="${GOOGLE_API_KEY:-}"
-export DISCORD_WEBHOOK="${DISCORD_WEBHOOK:-}"
+export DISCORD_WEBHOOK_TRADES="${DISCORD_WEBHOOK_TRADES:-}"
+export DISCORD_WEBHOOK_HEALTH="${DISCORD_WEBHOOK_HEALTH:-}"
+export DISCORD_WEBHOOK_SCHOOLGUARD="${DISCORD_WEBHOOK_SCHOOLGUARD:-}"
 export BOT_MODE=ULTRA
 export WHOOP_ACCESS_TOKEN="${WHOOP_ACCESS_TOKEN:-}"
 export OURA_ACCESS_TOKEN="${OURA_ACCESS_TOKEN:-}"
